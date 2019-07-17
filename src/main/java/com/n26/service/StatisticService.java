@@ -9,8 +9,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +19,6 @@ import com.n26.model.Transaction;
 public class StatisticService {
 
 	private static final int SECONDS = 60;
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(StatisticService.class);
 
 	private final Object lock = new Object();
 
@@ -59,6 +55,7 @@ public class StatisticService {
 	}
 
 	public void clearTransactions() {
+		timestamps.clear();
 		statisticsMap.clear();
 	}
 
@@ -98,9 +95,13 @@ public class StatisticService {
 		}
 	}
 
-	@Scheduled(fixedRate = 1000)
+	@Scheduled(fixedRate = 30000)
 	public void cleanup() {
-		Long first = Instant.now().minusSeconds(SECONDS).getEpochSecond();
+		cleanup(Instant.now());
+	}
+
+	public void cleanup(Instant instant) {
+		Long first = instant.minusSeconds(SECONDS).getEpochSecond();
 		Set<Long> removeable = new HashSet<>(timestamps.headSet(first));
 
 		for (Long key : removeable) {

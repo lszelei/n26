@@ -3,6 +3,8 @@ package com.n26.model;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 public class Statistic {
 
 	public static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2);
@@ -57,5 +59,10 @@ public class Statistic {
 		} else {
 			return getSum().divide(new BigDecimal(count), 2, RoundingMode.HALF_UP);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
 	}
 }

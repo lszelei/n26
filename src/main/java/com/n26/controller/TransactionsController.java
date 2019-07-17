@@ -49,5 +49,4 @@ public class TransactionsController {
 
 		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	}
-
 }

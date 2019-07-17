@@ -217,6 +217,52 @@ public class StatisticServiceTest {
 		assertEquals(count, statistic.getCount());
 	}
 
+	@Test
+	public void testAddTransactionAndCleanup() {
+		Instant now = Instant.now();
+		StatisticService service = new StatisticService();
+		Statistic statistic = service.calculateStatistics(now);
+
+		assertEquals(Statistic.ZERO, statistic.getSum());
+		assertEquals(Statistic.ZERO, statistic.getMax());
+		assertEquals(Statistic.ZERO, statistic.getMin());
+		assertEquals(Statistic.ZERO, statistic.getAvg());
+		assertEquals(0l, statistic.getCount());
+
+		ZonedDateTime dateTime = now.atZone(ZoneId.of(TransactionValidator.ZONE_ID));
+
+		BigDecimal bigDecimal = new BigDecimal("1.01");
+		Transaction transaction = new Transaction(bigDecimal, dateTime);
+		service.addTransaction(transaction);
+
+		for (long i = 0; i < 60; i++) {
+			statistic = service.calculateStatistics(now.plusSeconds(i));
+			assertEquals(bigDecimal, statistic.getSum());
+			assertEquals(bigDecimal, statistic.getMax());
+			assertEquals(bigDecimal, statistic.getMin());
+			assertEquals(bigDecimal, statistic.getAvg());
+			assertEquals(1l, statistic.getCount());
+		}
+
+		statistic = service.calculateStatistics(now.plusSeconds(60));
+		assertEquals(Statistic.ZERO, statistic.getSum());
+		assertEquals(Statistic.ZERO, statistic.getMax());
+		assertEquals(Statistic.ZERO, statistic.getMin());
+		assertEquals(Statistic.ZERO, statistic.getAvg());
+		assertEquals(0l, statistic.getCount());
+
+		service.cleanup(now.plusSeconds(61));
+
+		for (long i = 0; i < 60; i++) {
+			statistic = service.calculateStatistics(now.plusSeconds(i));
+			assertEquals(Statistic.ZERO, statistic.getSum());
+			assertEquals(Statistic.ZERO, statistic.getMax());
+			assertEquals(Statistic.ZERO, statistic.getMin());
+			assertEquals(Statistic.ZERO, statistic.getAvg());
+			assertEquals(0l, statistic.getCount());
+		}
+	}
+
 	private ZonedDateTime getRandomZonedDateTime(Random random, Instant instant, int limit) {
 		int generatedInt = random.nextInt(limit);
 		return instant.minusSeconds(generatedInt).atZone(ZoneId.of(TransactionValidator.ZONE_ID));
